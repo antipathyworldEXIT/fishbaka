@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 移动端核心适配标签 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <title>maimaiDX谱面演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft Yahei', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* 去除移动端点击高亮 */
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 15px; /* 减小移动端内边距 */
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* 减小间距 */
+            touch-action: manipulation; /* 优化触控响应 */
+        }
+
+        .container {
+            max-width: 100%; /* 移动端宽度100% */
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* 舞萌投票箱样式 - 移动端优化 */
+        .vote-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px 15px; /* 适配移动端内边距 */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .vote-title {
+            font-size: 1.2rem; /* 减小标题字号 */
+            margin-bottom: 15px;
+            color: #4fc3f7;
+            text-shadow: 0 0 8px rgba(79, 195, 247, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vote-title i {
+            font-size: 1.4rem;
+        }
+
+        .vote-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-direction: column; /* 移动端输入框和按钮垂直排列 */
+        }
+
+        #voteInput {
+            flex: 1;
+            min-width: 100%; /* 移动端宽度100% */
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(79, 195, 247, 0.3);
+            border-radius: 8px;
+            padding: 14px 15px; /* 增大输入框内边距，提升触控体验 */
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        #voteInput:focus {
+            border-color: #4fc3f7;
+            box-shadow: 0 0 10px rgba(79, 195, 247, 0.2);
+        }
+
+        #voteInput::placeholder {
+            color: #90caf9;
+            opacity: 0.8;
+        }
+
+        .vote-list {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 180px; /* 减小列表高度 */
+            overflow-y: auto;
+            border: 1px solid rgba(79, 195, 247, 0.1);
+        }
+
+        .vote-list-title {
+            font-size: 1rem;
+            color: #e1f5fe;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .vote-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            display: flex;
+            flex-direction: column; /* 移动端投票项垂直排列 */
+            align-items: flex-start;
+            border-left: 3px solid #4fc3f7;
+        }
+
+        .vote-item-content {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .vote-item-text {
+            color: #b3e5fc;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .vote-item-time {
+            color: #90caf9;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            opacity: 0.8;
+        }
+
+        .vote-item-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 0;
+            align-self: flex-end; /* 删除按钮靠右 */
+        }
+
+        .header {
+            text-align: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 1.8rem; /* 减小主标题字号 */
+            margin-bottom: 8px;
+            color: #4fc3f7;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+        }
+
+        .subtitle {
+            color: #90caf9;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .producer {
+            color: #a8d8ff;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        .player-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            flex: 1;
+            min-height: 300px; /* 减小播放器最小高度 */
+        }
+
+        .player-title {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #e1f5fe;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .video-selector-container {
+            margin-bottom: 15px;
+        }
+
+        #videoSelector {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; /* 增大圆角 */
+            padding: 12px 10px; /* 增大内边距，提升触控 */
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #videoSelector option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .video-player {
+            width: 100%;
+            border-radius: 8px;
+            background: #000;
+            margin-bottom: 15px;
+            aspect-ratio: 16/9;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-direction: column; /* 移动端按钮垂直排列 */
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .upload-title {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #e1f5fe;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .upload-title i {
+            color: #4fc3f7;
+        }
+
+        #dragArea {
+            border: 2px dashed rgba(79, 195, 247, 0.5);
+            border-radius: 8px;
+            padding: 30px 15px; /* 减小上传区域内边距 */
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 15px;
+        }
+
+        #dragArea:hover {
+            border-color: #4fc3f7;
+            background: rgba(79, 195, 247, 0.1);
+        }
+
+        .drag-icon {
+            font-size: 2.5rem; /* 减小图标尺寸 */
+            color: #4fc3f7;
+            margin-bottom: 12px;
+        }
+
+        .drag-text {
+            color: #b3e5fc;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .drag-hint {
+            color: #90caf9;
+            font-size: 0.8rem;
+        }
+
+        .video-list-title {
+            font-size: 1.1rem;
+            margin: 15px 0 12px;
+            color: #e1f5fe;
+        }
+
+        #uploadedList {
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        #uploadedList::-webkit-scrollbar,
+        .vote-list::-webkit-scrollbar {
+            width: 4px; /* 减小滚动条宽度 */
+        }
+
+        #uploadedList::-webkit-scrollbar-track,
+        .vote-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        #uploadedList::-webkit-scrollbar-thumb,
+        .vote-list::-webkit-scrollbar-thumb {
+            background: rgba(79, 195, 247, 0.5);
+            border-radius: 3px;
+        }
+
+        .video-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4fc3f7;
+        }
+
+        .video-title-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; /* 增大圆角 */
+            padding: 12px 10px; /* 增大内边距 */
+            color: #fff;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .video-title-input:focus {
+            border-color: #4fc3f7;
+        }
+
+        .video-info {
+            color: #90caf9;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            padding: 12px 20px; /* 增大按钮内边距，提升触控 */
+            border: none;
+            border-radius: 8px; /* 增大按钮圆角 */
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center; /* 按钮内容居中 */
+            gap: 8px;
+            width: 100%; /* 移动端按钮宽度100% */
+        }
+
+        .btn-primary {
+            background: #2196f3;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #1976d2;
+        }
+
+        .btn-secondary {
+            background: #ff9800;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #f57c00;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-vote {
+            background: #4caf50;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .btn-vote:hover {
+            background: #388e3c;
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            width: auto; /* 小按钮宽度自适应 */
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* 像素小猫样式 - 移动端优化 */
+        .pixel-cat {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            width: 60px; /* 减小尺寸 */
+            height: 60px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            background-color: rgba(79, 195, 247, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4fc3f7;
+            font-size: 1.5rem;
+            border: 2px solid #4fc3f7;
+        }
+
+        .pixel-cat img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .empty-vote {
+            color: #999;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 舞萌投票箱区域 -->
+        <div class="vote-section">
+            <h2 class="vote-title">
+                <i class="fas fa-poll"></i> 舞萌谱面演示投票箱
+            </h2>
+            <div class="vote-input-group">
+                <input type="text" id="voteInput" placeholder="请输入你想看的舞萌谱面名称/编号，例如：宵々古今 MASTER" />
+                <button id="addVoteBtn" class="btn btn-vote">
+                    <i class="fas fa-plus"></i> 提交投票
+                </button>
+            </div>
+            <div class="vote-list">
+                <h3 class="vote-list-title">
+                    <i class="fas fa-list"></i> 投票列表
+                </h3>
+                <div id="voteListContainer">
+                    <div class="empty-vote">暂无投票内容，快来提交你想看的谱面吧！</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header">
+            <h1>maimaiDX谱面演示</h1>
+            <p class="subtitle">本地视频上传、持久化存储与播放</p>
+            <p class="producer">制作人@小杂鱼秋秋</p>
+        </div>
+
+        <div class="player-section">
+            <h2 class="player-title">
+                <i class="fas fa-play-circle"></i> 视频播放
+            </h2>
+            
+            <div class="video-selector-container">
+                <select id="videoSelector" disabled>
+                    <option value="">请选择要播放的视频</option>
+                </select>
+            </div>
+
+            <video id="demoVideo" class="video-player" controls></video>
+
+            <div class="control-buttons">
+                <button id="playBtn" class="btn btn-primary" disabled>
+                    <i class="fas fa-play"></i> 播放
+                </button>
+                <button id="pauseBtn" class="btn btn-secondary" disabled>
+                    <i class="fas fa-pause"></i> 暂停
+                </button>
+                <button id="resetBtn" class="btn btn-danger" disabled>
+                    <i class="fas fa-redo"></i> 重置
+                </button>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <h2 class="upload-title">
+                <i class="fas fa-cloud-upload-alt"></i> 视频上传
+            </h2>
+            
+            <div id="dragArea">
+                <div class="drag-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <p class="drag-text">点击或拖拽视频文件到此处上传</p>
+                <p class="drag-hint">支持 MP4、WebM、MOV 等常见视频格式</p>
+                <input type="file" id="fileInput" accept="video/*" multiple style="display: none;">
+            </div>
+
+            <h3 class="video-list-title">已上传视频</h3>
+            <div id="uploadedList">
+                <div style="color: #999; text-align: center; padding: 5px;">暂无上传的视频</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 像素小猫元素 -->
+    <div id="pixelCat" class="pixel-cat">
+        <img src="https://i.imgur.com/7WZ3Q8h.png" alt="像素小猫" />
+    </div>
+
+    <script>
+        // ========== 舞萌投票箱功能 ==========
+        const voteInput = document.getElementById('voteInput');
+        const addVoteBtn = document.getElementById('addVoteBtn');
+        const voteListContainer = document.getElementById('voteListContainer');
+        
+        // 从本地存储加载投票数据
+        let voteList = JSON.parse(localStorage.getItem('maimaiVoteList')) || [];
+
+        // 初始化投票列表
+        function initVoteList() {
+            renderVoteList();
+        }
+
+        // 渲染投票列表
+        function renderVoteList() {
+            if (voteList.length === 0) {
+                voteListContainer.innerHTML = '<div class="empty-vote">暂无投票内容，快来提交你想看的谱面吧！</div>';
+                return;
+            }
+
+            voteListContainer.innerHTML = '';
+            voteList.forEach((item, index) => {
+                const voteItem = document.createElement('div');
+                voteItem.className = 'vote-item';
+                voteItem.innerHTML = `
+                    <div class="vote-item-content">
+                        <div class="vote-item-text">${item.content}</div>
+                        <div class="vote-item-time">提交时间：${item.time}</div>
+                    </div>
+                    <div class="vote-item-actions">
+                        <button class="btn btn-danger btn-sm delete-vote" data-index="${index}">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    </div>
+                `;
+                voteListContainer.appendChild(voteItem);
+            });
+
+            // 绑定删除事件
+            document.querySelectorAll('.delete-vote').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    deleteVoteItem(index);
+                });
+            });
+        }
+
+        // 添加投票项
+        function addVoteItem() {
+            const content = voteInput.value.trim();
+            if (!content) {
+                alert('请输入你想看的舞萌谱面名称！');
+                return;
+            }
+
+            // 创建投票项
+            const now = new Date();
+            const timeStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            voteList.unshift({
+                content: content,
+                time: timeStr
+            });
+
+            // 保存到本地存储
+            localStorage.setItem('maimaiVoteList', JSON.stringify(voteList));
+            
+            // 重新渲染列表
+            renderVoteList();
+            
+            // 清空输入框
+            voteInput.value = '';
+            
+            // 聚焦输入框
+            voteInput.focus();
+        }
+
+        // 删除投票项
+        function deleteVoteItem(index) {
+            if (confirm('确定要删除这条投票吗？')) {
+                voteList.splice(index, 1);
+                // 更新本地存储
+                localStorage.setItem('maimaiVoteList', JSON.stringify(voteList));
+                // 重新渲染列表
+                renderVoteList();
+            }
+        }
+
+        // 绑定添加投票事件
+        addVoteBtn.addEventListener('click', addVoteItem);
+        
+        // 回车提交
+        voteInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                addVoteItem();
+            }
+        });
+
+        // ========== 原有视频功能 ==========
+        const dragArea = document.getElementById('dragArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadedList = document.getElementById('uploadedList');
+        const videoSelector = document.getElementById('videoSelector');
+        const demoVideo = document.getElementById('demoVideo');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const pixelCat = document.getElementById('pixelCat');
+
+        let uploadedVideos = JSON.parse(localStorage.getItem('maimaiVideosMeta')) || [];
+        let db;
+        const DB_NAME = 'maimaiVideoDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'videos';
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                request.onerror = (e) => {
+                    reject('IndexedDB初始化失败：' + e.target.error);
+                };
+            });
+        }
+
+        function getVideoFromDB(videoId) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get(videoId);
+                request.onsuccess = (e) => {
+                    resolve(e.target.result);
+                };
+                request.onerror = (e) => {
+                    reject(e.target.error);
+                };
+            });
+        }
+
+        function saveVideoToDB(videoData) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put(videoData);
+                request.onsuccess = () => {
+                    resolve();
+                };
+                request.onerror = (e) => {
+                    reject(e.target.error);
+                };
+            });
+        }
+
+        function deleteVideoFromDB(videoId) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(videoId);
+                request.onsuccess = () => {
+                    resolve();
+                };
+                request.onerror = (e) => {
+                    reject(e.target.error);
+                };
+            });
+        }
+
+        window.addEventListener('load', async () => {
+            // 初始化投票箱
+            initVoteList();
+            
+            try {
+                await initDB();
+                if (uploadedVideos.length > 0) {
+                    uploadedList.innerHTML = '';
+                    for (const video of uploadedVideos) {
+                        const videoData = await getVideoFromDB(video.id);
+                        if (videoData) {
+                            const blob = new Blob([videoData.file], { type: video.fileType });
+                            video.url = URL.createObjectURL(blob);
+                            createVideoListItem(video);
+                        }
+                    }
+                    updateVideoSelector();
+                    videoSelector.disabled = false;
+                    playBtn.disabled = false;
+                    resetBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error('页面初始化失败：', err);
+                alert('视频持久化初始化失败，请刷新重试！');
+            }
+        });
+
+        function createVideoListItem(video) {
+            const videoItem = document.createElement('div');
+            videoItem.className = 'video-item';
+            videoItem.dataset.id = video.id;
+            videoItem.innerHTML = `
+                <input type="text" class="video-title-input" placeholder="输入视频标题" value="${video.title}">
+                <div class="video-info">
+                    文件名：${video.name} | 大小：${video.size} MB
+                </div>
+                <button class="btn btn-danger btn-remove" data-id="${video.id}">
+                    <i class="fas fa-trash"></i> 删除
+                </button>
+            `;
+            uploadedList.appendChild(videoItem);
+
+            const titleInput = videoItem.querySelector('.video-title-input');
+            titleInput.addEventListener('change', () => {
+                const index = uploadedVideos.findIndex(v => v.id === video.id);
+                if (index !== -1) {
+                    uploadedVideos[index].title = titleInput.value;
+                    updateVideoSelector();
+                    localStorage.setItem('maimaiVideosMeta', JSON.stringify(uploadedVideos));
+                }
+            });
+
+            const removeBtn = videoItem.querySelector('.btn-remove');
+            removeBtn.addEventListener('click', () => {
+                removeVideo(video.id);
+            });
+        }
+
+        dragArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        dragArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragArea.style.background = 'rgba(79, 195, 247, 0.2)';
+        });
+
+        dragArea.addEventListener('dragleave', () => {
+            dragArea.style.background = 'rgba(255, 255, 255, 0.05)';
+        });
+
+        dragArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragArea.style.background = 'rgba(255, 255, 255, 0.05)';
+            if (e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFiles(fileInput.files);
+            }
+        });
+
+        async function handleFiles(files) {
+            await initDB();
+            if (uploadedVideos.length === 0) {
+                uploadedList.innerHTML = '';
+            }
+            for (const file of Array.from(files)) {
+                if (!file.type.startsWith('video/')) {
+                    alert(`文件 ${file.name} 不是视频文件，请重新选择！`);
+                    continue;
+                }
+                const videoId = 'video_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                const fileReader = new FileReader();
+                fileReader.onload = async (e) => {
+                    try {
+                        const videoMeta = {
+                            id: videoId,
+                            name: file.name,
+                            title: `谱面演示_${file.name.split('.')[0]}`,
+                            size: (file.size / 1024 / 1024).toFixed(2),
+                            fileType: file.type
+                        };
+                        const videoData = {
+                            id: videoId,
+                            file: e.target.result
+                        };
+                        await saveVideoToDB(videoData);
+                        const blob = new Blob([videoData.file], { type: file.type });
+                        videoMeta.url = URL.createObjectURL(blob);
+                        uploadedVideos.push(videoMeta);
+                        localStorage.setItem('maimaiVideosMeta', JSON.stringify(uploadedVideos));
+                        createVideoListItem(videoMeta);
+                        updateVideoSelector();
+                        videoSelector.disabled = false;
+                        playBtn.disabled = false;
+                        resetBtn.disabled = false;
+                    } catch (err) {
+                        console.error('保存视频失败：', err);
+                        alert(`文件 ${file.name} 上传失败，请重试！`);
+                    }
+                };
+                fileReader.readAsArrayBuffer(file);
+            }
+        }
+
+        function updateVideoSelector() {
+            videoSelector.innerHTML = '';
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '请选择要播放的视频';
+            videoSelector.appendChild(defaultOption);
+            uploadedVideos.forEach(video => {
+                const option = document.createElement('option');
+                option.value = video.id;
+                option.textContent = video.title;
+                videoSelector.appendChild(option);
+            });
+        }
+
+        async function removeVideo(videoId) {
+            try {
+                const index = uploadedVideos.findIndex(v => v.id === videoId);
+                if (index !== -1) {
+                    URL.revokeObjectURL(uploadedVideos[index].url);
+                    uploadedVideos.splice(index, 1);
+                    localStorage.setItem('maimaiVideosMeta', JSON.stringify(uploadedVideos));
+                    await deleteVideoFromDB(videoId);
+                }
+                const videoItem = document.querySelector(`.video-item[data-id="${videoId}"]`);
+                if (videoItem) {
+                    videoItem.remove();
+                }
+                if (demoVideo.src && demoVideo.src.includes(videoId)) {
+                    demoVideo.src = '';
+                    playBtn.disabled = true;
+                    pauseBtn.disabled = true;
+                }
+                updateVideoSelector();
+                if (uploadedVideos.length === 0) {
+                    uploadedList.innerHTML = '<div style="color: #999; text-align: center; padding: 5px;">暂无上传的视频</div>';
+                    videoSelector.disabled = true;
+                    playBtn.disabled = true;
+                    resetBtn.disabled = true;
+                }
+            } catch (err) {
+                console.error('删除视频失败：', err);
+                alert('视频删除失败，请重试！');
+            }
+        }
+
+        videoSelector.addEventListener('change', async () => {
+            const selectedId = videoSelector.value;
+            if (!selectedId) {
+                demoVideo.src = '';
+                playBtn.disabled = true;
+                pauseBtn.disabled = true;
+                return;
+            }
+            const videoMeta = uploadedVideos.find(v => v.id === selectedId);
+            if (videoMeta) {
+                const videoData = await getVideoFromDB(selectedId);
+                if (videoData) {
+                    const blob = new Blob([videoData.file], { type: videoMeta.fileType });
+                    videoMeta.url = URL.createObjectURL(blob);
+                    demoVideo.src = videoMeta.url;
+                    demoVideo.pause();
+                    playBtn.disabled = false;
+                    pauseBtn.disabled = true;
+                }
+            }
+        });
+
+        playBtn.addEventListener('click', () => {
+            demoVideo.play();
+            playBtn.disabled = true;
+            pauseBtn.disabled = false;
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            demoVideo.pause();
+            pauseBtn.disabled = true;
+            playBtn.disabled = false;
+        });
+
+        resetBtn.addEventListener('click', () => {
+            demoVideo.currentTime = 0;
+            demoVideo.pause();
+            playBtn.disabled = false;
+            pauseBtn.disabled = true;
+        });
+
+        demoVideo.addEventListener('ended', () => {
+            playBtn.disabled = false;
+            pauseBtn.disabled = true;
+        });
+
+        // 像素小猫点击动画
+        pixelCat.addEventListener('click', () => {
+            pixelCat.style.transform = 'scale(1.2) rotate(10deg)';
+            setTimeout(() => {
+                pixelCat.style.transform = 'scale(1) rotate(0)';
+            }, 300);
+        });
+
+        // 图片加载失败兜底
+        const catImg = pixelCat.querySelector('img');
+        catImg.addEventListener('error', () => {
+            pixelCat.innerHTML = '<i class="fas fa-cat"></i>';
+        });
+
+        window.addEventListener('unload', () => {
+            uploadedVideos.forEach(video => {
+                URL.revokeObjectURL(video.url);
+            });
+        });
+    </script>
+</body>
+</html>
